@@ -1,0 +1,486 @@
+
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Edit, Save, X, LogOut, HelpCircle, Upload, Image as ImageIcon, Link as LinkIcon, Filter, Video as VideoIcon, PlayCircle, Maximize, Info } from 'lucide-react';
+import { Project, SiteSettings } from '../types';
+import { getProjects, saveProjects, getSiteSettings, saveSiteSettings } from '../data';
+import { getYoutubeId } from '../utils';
+
+// Helper to get image dimensions
+const getImageDimensions = (base64: string): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+    };
+    img.src = base64;
+  });
+};
+
+const Admin: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [password, setPassword] = useState('');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [settings, setSettings] = useState<SiteSettings>({ homeBanner: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Project>>({});
+  const [showManual, setShowManual] = useState(false);
+  const [adminFilter, setAdminFilter] = useState<'All' | 'Web' | 'Branding' | 'Video' | 'Marketing'>('All');
+  
+  // State to store dimensions of images in the current edit form
+  const [dimensions, setDimensions] = useState<{ [key: string]: { width: number, height: number } }>({});
+
+  const categories: ('All' | 'Web' | 'Branding' | 'Video' | 'Marketing')[] = ['All', 'Web', 'Branding', 'Video', 'Marketing'];
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setProjects(getProjects());
+      setSettings(getSiteSettings());
+    }
+  }, [isLoggedIn]);
+
+  // Update dimensions when editing starts or images change
+  useEffect(() => {
+    const updateAllDimensions = async () => {
+      const newDims: { [key: string]: { width: number, height: number } } = {};
+      
+      if (editForm.thumbnail) {
+        newDims['thumb'] = await getImageDimensions(editForm.thumbnail);
+      }
+      
+      if (editForm.images) {
+        for (let i = 0; i < editForm.images.length; i++) {
+          newDims[`img_${i}`] = await getImageDimensions(editForm.images[i]);
+        }
+      }
+      
+      setDimensions(newDims);
+    };
+
+    if (editingId) {
+      updateAllDimensions();
+    }
+  }, [editingId, editForm.thumbnail, editForm.images?.length]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === '1111') {
+      setIsLoggedIn(true);
+    } else {
+      alert('Incorrect password');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setPassword('');
+  };
+
+  const startEdit = (p: Project) => {
+    setEditingId(p.id);
+    setEditForm(p);
+  };
+
+  const saveEdit = () => {
+    const updated = projects.map(p => p.id === editingId ? { ...p, ...editForm } as Project : p);
+    setProjects(updated);
+    saveProjects(updated);
+    setEditingId(null);
+  };
+
+  const deleteProject = (id: string) => {
+    if (window.confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) {
+      const updated = projects.filter(p => p.id !== id);
+      setProjects(updated);
+      saveProjects(updated);
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const base64 = await fileToBase64(file);
+      setEditForm({ ...editForm, thumbnail: base64 });
+    }
+  };
+
+  const handleMultipleImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages = [...(editForm.images || [])];
+      for (let i = 0; i < files.length; i++) {
+        const base64 = await fileToBase64(files[i]);
+        newImages.push(base64);
+      }
+      setEditForm({ ...editForm, images: newImages });
+    }
+  };
+
+  const removeProjectImage = (index: number) => {
+    const newImages = [...(editForm.images || [])];
+    newImages.splice(index, 1);
+    setEditForm({ ...editForm, images: newImages });
+  };
+
+  const addNew = () => {
+    const initialCategory = adminFilter === 'All' ? 'Web' : adminFilter;
+    const newProject: Project = {
+      id: Date.now().toString(),
+      title: `${initialCategory} 신규 프로젝트`,
+      category: initialCategory as any,
+      thumbnail: 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80&w=400&h=400',
+      period: '2024.01 - 2024.02',
+      role: '역할을 입력하세요',
+      skills: ['Skill'],
+      problem: '',
+      process: '',
+      solution: '',
+      results: '',
+      images: [],
+      featured: false,
+      link: ''
+    };
+    const updated = [...projects, newProject];
+    setProjects(updated);
+    saveProjects(updated);
+    startEdit(newProject);
+  };
+
+  const filteredProjects = adminFilter === 'All' 
+    ? projects 
+    : projects.filter(p => p.category === adminFilter);
+
+  const youtubeId = editForm.link ? getYoutubeId(editForm.link) : null;
+
+  if (!isLoggedIn) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50 px-6">
+        <div className="max-w-md w-full bg-white p-12 rounded-sm shadow-sm text-center">
+          <h1 className="text-3xl serif mb-8 font-bold">Admin Access</h1>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <input 
+              type="password" 
+              className="w-full border-b border-gray-300 py-3 text-center focus:outline-none focus:border-black font-bold tracking-widest" 
+              placeholder="Enter Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button type="submit" className="w-full bg-black text-white py-4 rounded-sm uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-soft">
+              Login
+            </button>
+          </form>
+          <p className="mt-8 text-xs text-gray-400">Restricted Area (PW: 1111)</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-32 pb-24 px-6 min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+          <div>
+            <h1 className="text-4xl serif mb-2 font-bold">Portfolio Console</h1>
+            <p className="text-sm text-gray-500 font-light">각 카테고리별 프로젝트를 효율적으로 관리하세요.</p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <button 
+              onClick={() => setShowManual(!showManual)}
+              className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 border border-gray-300 px-6 py-3 rounded-sm hover:bg-white transition-soft"
+            >
+              <HelpCircle size={14} /> Manual
+            </button>
+            <button 
+              onClick={addNew}
+              className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-sm uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-soft"
+            >
+              <Plus size={16} /> Add {adminFilter === 'All' ? 'Project' : adminFilter}
+            </button>
+            <button onClick={handleLogout} className="p-3 text-gray-400 hover:text-black transition-colors">
+              <LogOut size={20} />
+            </button>
+          </div>
+        </div>
+
+        {showManual && (
+          <div className="bg-white p-8 rounded-sm mb-12 shadow-sm border-l-4 border-black animate-in fade-in slide-in-from-top-4">
+            <h2 className="text-xl serif mb-6 italic font-bold">관리자 매뉴얼 (User Manual)</h2>
+            <div className="grid md:grid-cols-2 gap-8 text-sm text-gray-600 font-light leading-relaxed">
+              <div className="space-y-4">
+                <h4 className="font-bold text-black flex items-center gap-2 uppercase tracking-widest text-[10px]"><ImageIcon size={14}/> 이미지 권장 해상도 가이드</h4>
+                <ul className="space-y-2 pl-4 border-l border-gray-100">
+                  <li>• <strong>메인 썸네일:</strong> 가로 800px 이상 (최적 비율 16:9)</li>
+                  <li>• <strong>상세 갤러리:</strong> 가로 1920px 이상 (고화질 디스플레이 대응)</li>
+                  <li>• <strong>파일 형식:</strong> JPG, PNG, WebP 지원</li>
+                  <li>• <strong>주의사항:</strong> 너무 큰 파일(5MB 이상)은 로딩 속도를 저하시킵니다.</li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-bold text-black flex items-center gap-2 uppercase tracking-widest text-[10px]"><VideoIcon size={14}/> 비디오 및 링크 가이드</h4>
+                <ul className="space-y-2 pl-4 border-l border-gray-100">
+                  <li>• <strong>유튜브:</strong> Shorts, Live, 일반 영상 모두 ID 자동 추출을 지원합니다.</li>
+                  <li>• <strong>업데이트:</strong> 모든 정보 입력 후 하단 'Save Project' 버튼을 눌러야 저장됩니다.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2 mb-8 border-b border-gray-200">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setAdminFilter(cat)}
+              className={`px-8 py-4 text-xs font-bold uppercase tracking-widest transition-soft border-b-2 ${
+                adminFilter === cat 
+                ? 'border-black text-black' 
+                : 'border-transparent text-gray-400 hover:text-black'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          {filteredProjects.map(project => (
+            <div key={project.id} className="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden">
+              {editingId === project.id ? (
+                <div className="p-8 space-y-10 animate-in fade-in slide-in-from-top-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    <div className="space-y-8">
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                            Main Thumbnail <span title="목록 페이지에서 보여지는 대표 이미지입니다."><Info size={10} className="text-gray-300" /></span>
+                          </label>
+                          {dimensions['thumb'] && (
+                            <span className={`text-[9px] font-mono font-bold flex items-center gap-1 ${dimensions['thumb'].width < 800 ? 'text-orange-500' : 'text-gray-400'}`}>
+                              <Maximize size={10} /> {dimensions['thumb'].width} x {dimensions['thumb'].height}px
+                            </span>
+                          )}
+                        </div>
+                        <div className="relative group aspect-square bg-gray-50 rounded-sm overflow-hidden border border-gray-100">
+                          <img src={editForm.thumbnail} className="w-full h-full object-cover" />
+                          <input 
+                            type="file" accept="image/*" onChange={handleThumbnailUpload}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white pointer-events-none">
+                            <Upload size={20} className="mb-2" />
+                            <span className="text-[10px] uppercase tracking-widest font-bold">Change Image</span>
+                          </div>
+                        </div>
+                        <div className="mt-3 p-3 bg-blue-50/50 rounded-sm border border-blue-100/50">
+                          <p className="text-[9px] text-blue-600 font-bold uppercase tracking-widest leading-relaxed">
+                            💡 권장 사양: 가로 800px 이상<br/>
+                            <span className="font-normal opacity-70">모바일 및 태블릿 대응을 위한 최소 기준입니다.</span>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Project Title</label>
+                          <input 
+                            type="text" className="w-full border-b border-gray-200 py-2 text-xl serif font-bold focus:outline-none focus:border-black" 
+                            value={editForm.title} 
+                            onChange={e => setEditForm({...editForm, title: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Category</label>
+                          <select 
+                            className="w-full border-b border-gray-200 py-2 text-sm focus:outline-none focus:border-black font-medium"
+                            value={editForm.category}
+                            onChange={e => setEditForm({...editForm, category: e.target.value as any})}
+                          >
+                            <option>Web</option>
+                            <option>Branding</option>
+                            <option>Video</option>
+                            <option>Marketing</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-2 space-y-8">
+                      <div className="grid grid-cols-2 gap-8">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Project Period</label>
+                          <input 
+                            type="text" className="w-full border-b border-gray-200 py-2 text-sm focus:outline-none focus:border-black" 
+                            value={editForm.period} 
+                            onChange={e => setEditForm({...editForm, period: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Role / Contribution</label>
+                          <input 
+                            type="text" className="w-full border-b border-gray-200 py-2 text-sm focus:outline-none focus:border-black" 
+                            value={editForm.role} 
+                            onChange={e => setEditForm({...editForm, role: e.target.value})}
+                          />
+                        </div>
+                      </div>
+
+                      {editForm.category === 'Video' ? (
+                        <div className="bg-gray-50 p-8 rounded-sm border border-gray-100 space-y-6">
+                          <div className="flex items-center gap-3 mb-2">
+                            <VideoIcon size={18} className="text-black" />
+                            <h4 className="text-xs font-bold uppercase tracking-widest">YouTube Video Configuration</h4>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] uppercase tracking-widest text-gray-400 mb-2 font-bold">YouTube URL</label>
+                            <div className="flex items-center gap-3 bg-white p-3 border border-gray-200 rounded-sm">
+                              <LinkIcon size={14} className="text-gray-400" />
+                              <input 
+                                type="text" className="flex-grow bg-transparent text-sm focus:outline-none" 
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                value={editForm.link || ''} 
+                                onChange={e => setEditForm({...editForm, link: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                          
+                          {youtubeId ? (
+                            <div className="space-y-3">
+                              <label className="block text-[9px] uppercase tracking-widest text-gray-400 font-bold">Live Preview</label>
+                              <div className="aspect-video w-full max-w-md bg-black rounded-sm overflow-hidden shadow-lg relative">
+                                <img src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`} className="w-full h-full object-cover opacity-50" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <PlayCircle size={48} className="text-white" />
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="aspect-video w-full max-w-md bg-gray-100 border-2 border-dashed border-gray-200 rounded-sm flex flex-col items-center justify-center text-gray-400 gap-2">
+                              <PlayCircle size={32} strokeWidth={1} />
+                              <p className="text-[10px] uppercase tracking-widest font-bold">Enter a link to see preview</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                              Project Gallery <span title="상세 페이지에서 세로로 길게 나열되는 이미지들입니다."><Info size={10} className="text-gray-300" /></span>
+                            </label>
+                            <span className="text-[9px] text-gray-400 font-bold uppercase">Recommended: 1920px+ width</span>
+                          </div>
+                          <div className="relative group border-2 border-dashed border-gray-100 p-8 rounded-sm mb-6 bg-gray-50/30 hover:bg-gray-50 transition-colors">
+                            <input 
+                              type="file" multiple accept="image/*" onChange={handleMultipleImagesUpload}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <div className="text-center">
+                              <Upload className="mx-auto mb-2 text-gray-300" size={24} />
+                              <p className="text-xs text-gray-500 font-medium">여러 장의 고해상도 이미지 선택</p>
+                              <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-widest">Full HD (1920px) 이상 권장</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                            {editForm.images?.map((img, idx) => (
+                              <div key={idx} className="space-y-2">
+                                <div className="relative aspect-square rounded-sm overflow-hidden group/img border border-gray-100">
+                                  <img src={img} className="w-full h-full object-cover" />
+                                  <button 
+                                    onClick={() => removeProjectImage(idx)}
+                                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                </div>
+                                {dimensions[`img_${idx}`] && (
+                                  <p className={`text-[8px] font-mono text-center font-bold ${dimensions[`img_${idx}`].width < 1200 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                    {dimensions[`img_${idx}`].width} x {dimensions[`img_${idx}`].height}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-6 pt-10 border-t border-gray-50">
+                    <button onClick={() => setEditingId(null)} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                      <X size={14} /> Cancel
+                    </button>
+                    <button onClick={saveEdit} className="flex items-center gap-2 bg-black text-white px-12 py-5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-soft shadow-lg shadow-black/10">
+                      <Save size={16} /> Save Project
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 flex items-center justify-between group">
+                  <div className="flex items-center gap-8">
+                    <div className="w-24 h-24 bg-gray-50 rounded-sm overflow-hidden border border-gray-100 shadow-sm">
+                      <img src={project.thumbnail} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft duration-700" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="px-2 py-0.5 bg-gray-100 text-[8px] font-bold uppercase tracking-widest text-gray-500 rounded-full">{project.category}</span>
+                        {project.link && (
+                          <span title={project.category === 'Video' ? "YouTube Video" : "External Link"}>
+                            {project.category === 'Video' ? <VideoIcon size={12} className="text-black" /> : <LinkIcon size={12} className="text-gray-300" />}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-xl serif font-bold group-hover:text-black transition-colors">{project.title}</h3>
+                      <p className="text-xs text-gray-400 mt-2 font-light flex items-center gap-4">
+                        <span>{project.period}</span>
+                        <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+                        <span>{project.category === 'Video' ? 'Video Project' : `${project.images.length} Images`}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => startEdit(project)} 
+                      className="p-4 text-gray-400 hover:text-black hover:bg-gray-50 rounded-full transition-all"
+                      title="Edit Project"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button 
+                      onClick={() => deleteProject(project.id)} 
+                      className="p-4 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                      title="Delete Project"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+          
+          {filteredProjects.length === 0 && (
+            <div className="bg-white py-32 text-center border-2 border-dashed border-gray-100 rounded-sm">
+              <div className="flex justify-center mb-6 text-gray-200">
+                <Filter size={48} strokeWidth={1} />
+              </div>
+              <p className="text-gray-400 serif text-xl mb-6 font-light italic">No projects found in this category.</p>
+              <button onClick={addNew} className="text-xs font-bold uppercase tracking-widest text-black underline hover:text-gray-500 transition-colors">
+                Create a new {adminFilter === 'All' ? 'item' : adminFilter} project
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
