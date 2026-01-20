@@ -48,7 +48,18 @@ const INITIAL_PROJECTS: Project[] = [
 ];
 
 const DEFAULT_SETTINGS: SiteSettings = {
-  homeBanner: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2069'
+  homeBanner: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2069',
+  homeVideoLink: '', // 홈 페이지 배경 비디오 링크 (YouTube URL) - 복원됨
+  homeVideoFileBase64: '', // 홈 페이지 배경 비디오 파일 (Base64) - 추가됨
+  profilePicture: 'https://via.placeholder.com/160/E0E7FF/4F46E5?text=PROFILE', // 기본 프로필 사진
+  homeTagline: 'Experience Designer', // 홈 페이지 상단 태그라인 기본값
+  homeMotto: '"노력과 열정 그리고 디자인은 하나다."', // 홈 페이지 하단 모토 기본값
+  // webCategoryImage: 'https://via.placeholder.com/600/F0F4F8/6B7280?text=Web', // 제거됨
+  // brandingCategoryImage: 'https://via.placeholder.com/600/F0F4F8/6B7280?text=Branding', // 제거됨
+  // videoCategoryImage: 'https://via.placeholder.com/600/F0F4F8/6B7280?text=Video', // 제거됨
+  // marketingCategoryImage: 'https://via.placeholder.com/600/F0F4F8/6B7280?text=Marketing', // 제거됨
+  homeCategoryTagline: '', // 홈 페이지 카테고리 섹션 상단 태그라인 기본값 ('Explore Our Expertise' 삭제)
+  homeCategoryTitle: 'Design a memory of one\'s thoughts' // 홈 페이지 카테고리 섹션 제목 기본값
 };
 
 export const getProjects = (): Project[] => {
@@ -70,5 +81,14 @@ export const getSiteSettings = (): SiteSettings => {
 };
 
 export const saveSiteSettings = (settings: SiteSettings) => {
-  localStorage.setItem('site_settings', JSON.stringify(settings));
+  try {
+    localStorage.setItem('site_settings', JSON.stringify(settings));
+  } catch (e: any) {
+    if (e.name === 'QuotaExceededError') {
+      console.error("LocalStorage quota exceeded:", e);
+      throw new Error("Local storage limit exceeded. Please upload a smaller video or reduce other content size.");
+    }
+    console.error("Error saving site settings:", e);
+    throw e; // Re-throw other errors
+  }
 };

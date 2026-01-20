@@ -166,14 +166,14 @@ const ProjectDetail: React.FC = () => {
       <section className="py-32 border-t border-gray-100 px-6 text-center">
         <div className="max-w-4xl mx-auto">
           <p className="text-[10px] uppercase tracking-[0.5em] text-gray-400 mb-10 font-bold">End of project visual</p>
-          <h2 className="text-4xl md:text-5xl font-light serif mb-16 italic">Experience that matters.</h2>
+          {/* <h2 className="text-4xl md:text-5xl font-light serif mb-16 italic">Experience that matters.</h2> */} {/* REMOVED */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-10">
             <Link to="/portfolio" className="text-xs font-bold uppercase tracking-widest border-b-2 border-black pb-2 hover:text-gray-400 hover:border-gray-200 transition-soft">
               Explore More Works
             </Link>
-            <Link to="/contact" className="bg-black text-white px-12 py-5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-soft shadow-lg shadow-black/10">
+            {/* <Link to="/contact" className="bg-black text-white px-12 py-5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-soft shadow-lg shadow-black/10">
               Get in Touch
-            </Link>
+            </Link> */}
           </div>
         </div>
       </section>

@@ -33,7 +33,6 @@ const Admin: React.FC = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({ 
     homeBanner: '', 
     homeVideoLink: '',
-    homeVideoFileBase64: '', // homeVideoFileBase64 추가
     profilePicture: '', 
     homeTagline: '', 
     homeMotto: '',
@@ -200,29 +199,14 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleYoutubeLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // YouTube 링크 입력 시 로컬 비디오 초기화
-    setSiteSettings({ ...siteSettings, homeVideoLink: e.target.value, homeVideoFileBase64: '' });
-  };
-
-  const handleLocalVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('video/')) {
-        alert('비디오 파일만 업로드할 수 있습니다.');
-        e.target.value = ''; // Clear file input
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit for base64 video
-        alert('비디오 파일 크기가 너무 큽니다. 10MB 이하의 파일을 업로드해주세요.');
-        e.target.value = ''; // Clear file input
-        return;
-      }
-      const base64 = await fileToBase64(file);
-      // 로컬 비디오 업로드 시 YouTube 링크 초기화
-      setSiteSettings({ ...siteSettings, homeVideoFileBase64: base64, homeVideoLink: '' });
-    }
-  };
+  // Fix: Remove handleCategoryPictureUpload function as category images are no longer used
+  // const handleCategoryPictureUpload = (categoryKey: keyof SiteSettings) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     const base64 = await fileToBase64(file);
+  //     setSiteSettings({ ...siteSettings, [categoryKey]: base64 });
+  //   }
+  // };
 
   const saveSiteConfig = () => {
     saveSiteSettings(siteSettings);
@@ -365,9 +349,6 @@ const Admin: React.FC = () => {
                   <span className="font-normal opacity-70">이 이미지는 About 페이지 프로필 섹션에 사용됩니다.</span>
                 </p>
               </div>
-              <p className="mt-2 text-[9px] text-gray-500 font-light text-center">
-                * 변경 사항은 하단의 'Update Site Settings' 버튼 클릭 시 적용됩니다.
-              </p>
             </div>
 
             {/* Home Tagline Setting */}
@@ -482,9 +463,8 @@ const Admin: React.FC = () => {
             <h3 className="text-lg serif mb-8 italic font-bold flex items-center gap-3"><VideoIcon size={20} className="text-gray-400" /> Home Page Video</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div>
-                {/* YouTube Video URL Input */}
                 <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-3">
-                  YouTube Video URL <span title="홈페이지 배경에 표시될 YouTube 비디오 링크입니다. 로컬 비디오 업로드 시 자동으로 초기화됩니다."><Info size={10} className="text-gray-300" /></span>
+                  YouTube Video URL <span title="홈페이지 배경에 표시될 YouTube 비디오 링크입니다."><Info size={10} className="text-gray-300" /></span>
                 </label>
                 <div className="flex items-center gap-3 bg-gray-50 p-3 border border-gray-100 rounded-sm mb-4">
                   <LinkIcon size={14} className="text-gray-400" />
@@ -493,21 +473,21 @@ const Admin: React.FC = () => {
                     className="flex-grow bg-transparent text-sm focus:outline-none font-medium" 
                     placeholder="https://www.youtube.com/watch?v=..."
                     value={siteSettings.homeVideoLink || ''} 
-                    onChange={handleYoutubeLinkChange}
+                    onChange={e => setSiteSettings({...siteSettings, homeVideoLink: e.target.value})}
                   />
                   {siteSettings.homeVideoLink && (
                     <button 
                       onClick={() => setSiteSettings({...siteSettings, homeVideoLink: ''})}
                       className="p-1 text-gray-400 hover:text-red-500 rounded-full transition-colors"
-                      title="Clear YouTube Video Link"
+                      title="Clear Video Link"
                     >
                       <X size={14} />
                     </button>
                   )}
                 </div>
-                {homeVideoYoutubeId && (
-                  <div className="space-y-3 mb-8">
-                    <label className="block text-[9px] uppercase tracking-widest text-gray-400 font-bold">YouTube Preview</label>
+                {homeVideoYoutubeId ? (
+                  <div className="space-y-3">
+                    <label className="block text-[9px] uppercase tracking-widest text-gray-400 font-bold">Live Preview</label>
                     <div className="aspect-video w-full max-w-md bg-black rounded-sm overflow-hidden shadow-lg relative">
                       <img src={homeVideoYoutubeThumbnail || ''} className="w-full h-full object-cover opacity-50" />
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -515,51 +495,17 @@ const Admin: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                )}
-
-                {/* Local Video File Upload */}
-                <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-3 mt-8">
-                  Local Video File <span title="홈페이지 배경에 표시될 MP4/WebM 비디오 파일입니다. YouTube 링크 입력 시 자동으로 초기화됩니다."><Info size={10} className="text-gray-300" /></span>
-                </label>
-                <div className="relative group border-2 border-dashed border-gray-100 p-8 rounded-sm mb-4 bg-gray-50/30 hover:bg-gray-50 transition-colors">
-                  <input 
-                    type="file" accept="video/mp4,video/webm" onChange={handleLocalVideoUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  />
-                  <div className="text-center">
-                    <Upload className="mx-auto mb-2 text-gray-300" size={24} />
-                    <p className="text-xs text-gray-500 font-medium">MP4 또는 WebM 비디오 파일 선택</p>
-                    <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-widest">최대 10MB (권장)</p>
-                  </div>
-                </div>
-
-                {siteSettings.homeVideoFileBase64 ? (
-                  <div className="space-y-3">
-                    <label className="block text-[9px] uppercase tracking-widest text-gray-400 font-bold">Local Video Preview</label>
-                    <div className="aspect-video w-full max-w-md bg-black rounded-sm overflow-hidden shadow-lg relative">
-                      <video src={siteSettings.homeVideoFileBase64} controls muted className="w-full h-full object-cover" />
-                      <button 
-                        onClick={() => setSiteSettings({...siteSettings, homeVideoFileBase64: ''})}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full transition-colors"
-                        title="Clear Local Video"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ) : (!homeVideoYoutubeId && (
+                ) : (
                   <div className="aspect-video w-full max-w-md bg-gray-100 border-2 border-dashed border-gray-200 rounded-sm flex flex-col items-center justify-center text-gray-400 gap-2">
                     <VideoIcon size={32} strokeWidth={1} />
-                    <p className="text-[10px] uppercase tracking-widest font-bold">Upload a local video or enter a YouTube link</p>
+                    <p className="text-[10px] uppercase tracking-widest font-bold">Enter a YouTube link to see preview</p>
                   </div>
-                ))}
+                )}
               </div>
               <div className="p-3 bg-blue-50/50 rounded-sm border border-blue-100/50 self-start mt-8 md:mt-0">
                 <p className="text-[9px] text-blue-600 font-bold uppercase tracking-widest leading-relaxed">
                   💡 비디오 배경 가이드:<br/>
-                  <span className="font-normal opacity-90">로컬 비디오 파일을 업로드하거나 YouTube 비디오 링크를 입력하여 홈 페이지 배경에 자동 재생(음소거)합니다.</span><br/>
-                  <span className="font-normal opacity-90">두 옵션 중 하나만 활성화될 수 있습니다. (로컬 비디오 우선)</span><br/>
-                  <span className="font-normal opacity-90">로컬 비디오는 MP4 또는 WebM 형식, 10MB 이하를 권장합니다.</span><br/>
+                  <span className="font-normal opacity-90">유튜브 링크 입력 시 홈 페이지 배경에 자동 재생(음소거)됩니다.</span><br/>
                   <span className="font-normal opacity-90">모바일 환경에서는 데이터 사용량 및 성능 문제로 비디오 대신 '메인 배너' 이미지가 표시됩니다.</span><br/>
                   <span className="font-normal opacity-90">최적의 시각적 경험을 위해 고품질의 비디오를 사용하고, 비디오가 없는 경우 '메인 배너' 이미지가 중요합니다.</span>
                 </p>

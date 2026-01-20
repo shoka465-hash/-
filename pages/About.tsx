@@ -1,113 +1,206 @@
 
-import React from 'react';
-import { Star, Shield, Target, Coffee, Gamepad2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Paintbrush, PenTool, Film, Layers, Video, Code, Figma } from 'lucide-react'; // 필요한 아이콘 임포트
+import { getSiteSettings } from '../data'; // getSiteSettings 임포트
+import { SiteSettings } from '../types'; // SiteSettings 타입 임포트
 
 const About: React.FC = () => {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    setSettings(getSiteSettings());
+  }, []);
+
   return (
-    <div className="pt-32 pb-24 bg-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-6">
-        
-        {/* Storytelling Intro */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center mb-32">
-          <div className="order-2 md:order-1">
-            <p className="text-xs tracking-widest text-gray-400 uppercase mb-4">Hello, I am</p>
-            <h1 className="text-5xl md:text-7xl font-light serif mb-8 leading-tight">Kim Gil Seop</h1>
-            <div className="space-y-6 text-gray-600 font-light text-lg leading-relaxed">
-              <p>
-                어릴 적 호기심 많던 아이가 기계를 해체하며 디자인에 눈을 떴습니다. 
-                그때의 호기심은 이제 웹 디자인이라는 도구를 통해 사용자에게 
-                특별하고 의미 있는 경험을 선물하는 열정으로 이어졌습니다.
-              </p>
-              <p>
-                저는 디자인이 단순히 아름답기만 한 것이 아니라, 
-                사용자의 삶을 개선하고 비즈니스의 문제를 해결하는 전략적인 도구가 되어야 한다고 믿습니다.
-              </p>
-              <p className="font-medium text-black">
-                "노력과 열정 그리고 디자인은 하나다"
-              </p>
+    <div className="pt-20 pb-16 px-6 min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        {/* PROFILE Section (Top Intro) */}
+        <section className="mb-16 text-center"> {/* Added text-center for centering profile image/info */}
+          {settings?.profilePicture && (
+            <div className="w-40 h-40 md:w-56 md:h-56 bg-gray-100 rounded-full mx-auto overflow-hidden border-2 border-white shadow-md mb-8 group"> {/* Added group here */}
+              <img 
+                src={settings.profilePicture || 'https://via.placeholder.com/160/E0E7FF/4F46E5?text=PROFILE'} 
+                alt="Profile Picture" 
+                className="w-full h-full object-cover group-hover:scale-105 group-hover:rotate-1 transition-transform duration-300 ease-in-out" 
+              />
             </div>
-          </div>
-          <div className="order-1 md:order-2 aspect-[4/5] bg-gray-100 rounded-sm overflow-hidden grayscale">
-            <img 
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800&h=1000" 
-              alt="Profile" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </section>
-
-        {/* Values */}
-        <section className="mb-32">
-          <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-12 text-center">Core Values</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              { icon: <Shield size={32} />, title: 'Trust', desc: '고객과의 약속을 최우선으로 하며 깊은 신뢰 관계를 구축합니다.' },
-              { icon: <Target size={32} />, title: 'Strategy', desc: '직관적인 UI/UX를 통해 비즈니스 목표를 명확하게 달성합니다.' },
-              { icon: <Star size={32} />, title: 'Passion', desc: '작은 디테일 하나에도 노력과 열정을 담아 완성도를 높입니다.' }
-            ].map((v, i) => (
-              <div key={i} className="p-10 border border-gray-100 text-center hover:bg-gray-50 transition-soft">
-                <div className="flex justify-center mb-6 text-gray-400">{v.icon}</div>
-                <h3 className="text-xl font-light serif mb-4">{v.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed font-light">{v.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Skills & Experience */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-20 mb-32">
-          <div>
-            <h2 className="text-3xl font-light serif mb-8">Expertise</h2>
-            <div className="space-y-8">
-              {[
-                { name: 'Web Design (UI/UX)', level: '95%' },
-                { name: 'Marketing Strategy', level: '85%' },
-                { name: 'Video Production', level: '80%' },
-                { name: 'Branding', level: '90%' }
-              ].map(skill => (
-                <div key={skill.name}>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium">{skill.name}</span>
-                    <span className="text-xs text-gray-400">{skill.level}</span>
-                  </div>
-                  <div className="w-full h-1 bg-gray-100">
-                    <div className="h-full bg-black transition-soft" style={{ width: skill.level }}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h2 className="text-3xl font-light serif mb-8">Career Journey</h2>
-            <div className="space-y-12">
-              {[
-                { year: '2023 - Present', role: 'Freelance Design Lead', company: 'Self-Employed' },
-                { year: '2021 - 2023', role: 'Senior Web Designer', company: 'Digital Agency X' },
-                { year: '2019 - 2021', role: 'UI Designer', company: 'Tech Startup Y' }
-              ].map(job => (
-                <div key={job.year} className="flex gap-8">
-                  <span className="text-xs font-light text-gray-400 w-24 pt-1">{job.year}</span>
-                  <div>
-                    <h4 className="font-medium text-sm mb-1">{job.role}</h4>
-                    <p className="text-sm text-gray-500">{job.company}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Personal Interests (Gacha) */}
-        <section className="bg-gray-50 p-12 md:p-20 rounded-sm text-center">
-          <div className="flex justify-center mb-6 text-gray-400"><Gamepad2 size={40} /></div>
-          <h2 className="text-3xl font-light serif mb-6">Side Interests</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto font-light leading-relaxed">
-            디자인 외에도 저는 가챠샵 운영과 캐릭터 문화에 큰 관심을 가지고 있습니다. 
-            다양한 수집품들이 주는 즐거움과 공간이 주는 특별한 에너지는 저에게 
-            새로운 디자인 영감을 끊임없이 제공합니다. 😉
+          )}
+          <p className="text-[10px] uppercase tracking-[0.4em] text-gray-500 mb-6">PROFILE</p>
+          <h1 className="text-5xl md:text-6xl font-semibold serif leading-tight text-gray-900 mb-2">
+            Kim Gil Seop
+          </h1>
+          <p className="text-lg md:text-xl font-light text-gray-600 mb-2">
+            1986.08.02 ㅣ Tiger
+          </p>
+          <p className="text-lg md::text-xl font-light text-gray-600">
+            010 . 8860 . 6581
           </p>
         </section>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-20 gap-y-16">
+          {/* Left Column */}
+          <div>
+            {/* Education Section */}
+            <section className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 mb-8">
+              <h2 className="text-3xl font-light serif text-gray-900 mb-10">Education</h2>
+              <div className="space-y-6"> {/* Changed to space-y-6 for consistency */}
+                <div className="flex items-start gap-4"> {/* Wrapped content in flex container */}
+                  <p className="w-20 flex-shrink-0 text-sm text-gray-500">2013</p> {/* Year separate, matching Certificate style */}
+                  <p className="text-lg font-medium text-black">대림대학교 방송영상학과 전공</p> {/* Description, matching Certificate style */}
+                </div>
+              </div>
+            </section>
+
+            {/* Certificate Section */}
+            <section className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 mb-8">
+              <h2 className="text-3xl font-light serif text-gray-900 mb-10">Certificate</h2>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <p className="w-20 flex-shrink-0 text-sm text-gray-500">2023</p>
+                  <p className="text-lg font-medium text-black">초경량비행장치(드론) 조종자 4종 취득</p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <p className="w-20 flex-shrink-0 text-sm text-gray-500">2022</p>
+                  <p className="text-lg font-normal text-black">EUCA Barista Skill Expert 취득</p> {/* Changed font-medium to font-normal */}
+                </div>
+                <div className="flex items-start gap-4">
+                  <p className="w-20 flex-shrink-0 text-sm text-gray-500">2011</p>
+                  <p className="text-lg font-normal text-black">EUCA Barista Skill Basic 취득</p> {/* Changed font-medium to font-normal */}
+                </div>
+                <div className="flex items-start gap-4">
+                  <p className="w-20 flex-shrink-0 text-sm text-gray-500">2009</p>
+                  <p className="text-lg font-medium text-black">자동차운전면허 1종 취득</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Skill Section - Moved here */}
+            <section className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 mb-8"> {/* Added mb-16 for consistent spacing */}
+              <h2 className="text-3xl font-light serif text-gray-900 mb-10">Skill</h2>
+              <div className="space-y-6"> {/* This div maintains vertical spacing for all skill groups/items */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6"> {/* New grid for paired skills */}
+                  {/* Photoshop */}
+                  <div className="flex items-center gap-2">
+                    <Paintbrush size={20} className="text-gray-600" />
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-medium text-black">Photoshop</p>
+                      <p className="text-base font-bold text-yellow-500">★★★★☆</p>
+                    </div>
+                  </div>
+                  {/* Illustrator */}
+                  <div className="flex items-center gap-2">
+                    <PenTool size={20} className="text-gray-600" />
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-medium text-black">Illustrator</p>
+                      <p className="text-base font-bold text-yellow-500">★★★☆☆</p>
+                    </div>
+                  </div>
+
+                  {/* Premiere */}
+                  <div className="flex items-center gap-2">
+                    <Film size={20} className="text-gray-600" />
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-medium text-black">Premiere</p>
+                      <p className="text-base font-bold text-yellow-500">★★★★☆</p>
+                    </div>
+                  </div>
+                  {/* After effects */}
+                  <div className="flex items-center gap-2">
+                    <Layers size={20} className="text-gray-600" />
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-medium text-black">After effects</p>
+                      <p className="text-base font-bold text-yellow-500">★★★☆☆</p>
+                    </div>
+                  </div>
+
+                  {/* Davinci Resolve */}
+                  <div className="flex items-center gap-2">
+                    <Video size={20} className="text-gray-600" />
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-medium text-black">Davinci Resolve</p>
+                      <p className="text-base font-bold text-yellow-500">★★★★☆</p>
+                    </div>
+                  </div>
+                  {/* Dreamweaver */}
+                  <div className="flex items-center gap-2">
+                    <Code size={20} className="text-gray-600" />
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-medium text-black">Dreamweaver</p>
+                      <p className="text-base font-bold text-yellow-500">★★☆☆☆</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Figma on its own row, separated by space-y-6 from the grid above */}
+                <div className="flex items-center gap-2">
+                  <Figma size={20} className="text-gray-600" />
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-medium text-black">Figma</p>
+                    <p className="text-base font-bold text-yellow-500">★★★☆☆</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Right Column */}
+          <div>
+            {/* Experience Section */}
+            <section className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 mb-8">
+              <h2 className="text-3xl font-light serif text-gray-900 mb-10">Experience</h2>
+              <div className="space-y-10 pl-2"> {/* Add pl-2 for initial offset */}
+                {/* Individual Experience Item */}
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2022 -</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">(주)레푸스 온라인팀 과장(디자인 총괄)</p> {/* Changed font-bold to font-normal */}
+                </div>
+                
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2018 - 2021</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">(주)광천김 온라인팀 웹디자인, 영상 담당</p> {/* Changed font-bold to font-normal */}
+                </div>
+
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2016 - 2017</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">아로마랩 웹디자인 & 촬영 담당</p> {/* Changed font-bold to font-normal */}
+                </div>
+
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2016 - 2016</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">더에이작 웹디자인 담당</p> {/* Changed font-bold to font-normal */}
+                </div>
+
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2014 - 2015</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">(주)뷰메디컬 웹디자인 담당</p> {/* Changed font-bold to font-normal */}
+                </div>
+
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2013 - 2014</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">센서리트레인 웹디자인 담당</p> {/* Changed font-bold to font-normal */}
+                </div>
+
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2013 - 2014</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">에이뮤컴퍼니 웹디자인 & 촬영 담당</p> {/* Changed font-bold to font-normal */}
+                </div>
+
+                <div className="relative pl-8 pb-10 border-l border-gray-200 last:border-l-0 last:pb-0">
+                  <div className="absolute -left-2 top-0 w-4 h-4 bg-gray-300 rounded-full border-2 border-white"></div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">2012 - 2012</p>
+                  <p className="text-lg font-normal text-gray-900 leading-snug">대유비엠 제품디자인 담당(인턴)</p> {/* Changed font-bold to font-normal */}
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
     </div>
   );

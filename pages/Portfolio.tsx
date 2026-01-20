@@ -1,39 +1,47 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getProjects } from '../data';
 import { getYoutubeThumbnail } from '../utils';
 
 const Portfolio: React.FC = () => {
   const projects = getProjects();
-  const [filter, setFilter] = useState('All');
-  const categories = ['All', 'Web', 'Branding', 'Video', 'Marketing'];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categories = ['All', 'Web', 'Marketing', 'Branding', 'Video']; // Changed order
 
-  const filteredProjects = filter === 'All' 
+  // URL에서 'filter' 파라미터 값을 읽어오거나, 없으면 'All'을 기본값으로 사용
+  const currentFilter = searchParams.get('filter') || 'All';
+
+  const filteredProjects = currentFilter === 'All' 
     ? projects 
-    : projects.filter(p => p.category === filter);
+    : projects.filter(p => p.category === currentFilter);
+
+  const handleFilterChange = (cat: string) => {
+    if (cat === 'All') {
+      setSearchParams({}); // 'All' 선택 시 필터 파라미터 제거
+    } else {
+      setSearchParams({ filter: cat }); // 특정 카테고리 선택 시 필터 파라미터 설정
+    }
+  };
 
   return (
     <div className="pt-32 pb-24 px-6 min-h-screen bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-20">
-          <p className="text-xs tracking-widest text-gray-400 uppercase mb-4">Portfolio</p>
-          <h1 className="text-5xl md:text-7xl font-light serif mb-12">Selected Works</h1>
+        {/* "Selected Works" 섹션이 제거됨 */}
           
-          <div className="flex flex-wrap gap-x-8 gap-y-4">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`text-sm uppercase tracking-widest transition-soft relative pb-1
-                  ${filter === cat ? 'text-black font-bold' : 'text-gray-400 hover:text-black'}
-                `}
-              >
-                {cat}
-                {filter === cat && <span className="absolute bottom-0 left-0 w-full h-[1px] bg-black"></span>}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-x-8 gap-y-4 mb-20"> {/* 필터 버튼 위에 margin-bottom 추가 */}
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => handleFilterChange(cat)}
+              className={`text-sm uppercase tracking-widest transition-soft relative pb-1
+                ${currentFilter === cat ? 'text-black font-bold' : 'text-gray-400 hover:text-black'}
+              `}
+            >
+              {cat}
+              {currentFilter === cat && <span className="absolute bottom-0 left-0 w-full h-[1px] bg-black"></span>}
+            </button>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-20">
